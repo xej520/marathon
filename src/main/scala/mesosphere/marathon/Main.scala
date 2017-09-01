@@ -158,7 +158,7 @@ class MarathonApp(args: Seq[String]) extends AutoCloseable with StrictLogging {
 object Main {
   def main(args: Array[String]): Unit = {
     val log = LoggerFactory.getLogger(getClass.getName)
-    log.info("-----------------------start---------study------------marathon----------------------------")
+    log.info("--------------------------start---------study------------marathon----------------------------")
     val app = new MarathonApp(args.toVector)
     app.start()
   }
