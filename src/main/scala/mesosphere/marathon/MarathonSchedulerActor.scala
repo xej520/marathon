@@ -53,6 +53,7 @@ class MarathonSchedulerActor private (
     * - a lock is acquired if a kill operation is executed
     * - a lock is acquired if a scale operation is executed
     *
+    * 如果deployment 处于运行状态，不允许有kill/scale操作的
     * This basically means:
     * - a kill/scale operation should not be performed, while a deployment is in progress
     * - a deployment should not be started, if a scale/kill operation is in progress
@@ -68,7 +69,7 @@ class MarathonSchedulerActor private (
   var historyActor: ActorRef = _
   var activeReconciliation: Option[Future[Status]] = None
 
-  //actor启动时，会先执行这个
+  // actor启动时，会先执行这个
   // 作用应该是，进行注册，选举之类的
   override def preStart(): Unit = {
     schedulerActions = createSchedulerActions(self)
@@ -376,6 +377,7 @@ class SchedulerActions(
   // TODO move stuff below out of the scheduler
 
   def startRunSpec(runSpec: RunSpec): Unit = {
+    //runSpec.id 就是appID , 如 /ftp/lgy007b
     log.info(s"----->SchedulerActions.scala>-----Starting runSpec ${runSpec.id}")
     log.info("----->SchedulerActions.scala>----runSpec-------\n" +  runSpec)
     //    AppDefinition(
@@ -498,6 +500,7 @@ class SchedulerActions(
     log.info("--------<SchedulerActions.scala>---x-----:\n" + x + "\n")
       x.state.condition.isActive
     }
+
     log.info("-----<SchedulerActions.scala>------------scale----await-----after------------")
 
     def killToMeetConstraints(notSentencedAndRunning: Seq[Instance], toKillCount: Int) = {
@@ -512,6 +515,7 @@ class SchedulerActions(
     val ScalingProposition(instancesToKill, instancesToStart) = ScalingProposition.propose(
       runningInstances, None, killToMeetConstraints, targetCount, runSpec.killSelection)
 
+    // 处理多task逻辑， 将多余的task，进行删除
     instancesToKill.foreach { instances: Seq[Instance] =>
       log.info(s"-----<SchedulerActions.scala>-------Scaling ${runSpec.id} from ${runningInstances.size} down to $targetCount instances-------")
 

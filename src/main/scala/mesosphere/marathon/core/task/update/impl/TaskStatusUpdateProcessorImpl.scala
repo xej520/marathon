@@ -40,6 +40,7 @@ class TaskStatusUpdateProcessorImpl @Inject() (
   private[this] val killUnknownTaskTimer: Timer =
     metrics.timer(metrics.name(MetricPrefixes.SERVICE, getClass, "killUnknownTask"))
 
+  //这应该是构造器里的代码，只要一创建，就会运行的
   logger.info("Started status update processor")
 
   override def publish(status: MesosProtos.TaskStatus): Future[Unit] = publishTimer.timeFuture {
@@ -83,6 +84,7 @@ class TaskStatusUpdateProcessorImpl @Inject() (
       logger.info(s"------>TaskStatusUpdateProcessorImpl.scala<-----Acknowledge status update for task ${status.getTaskId.getValue}: ${status.getState} (${status.getMessage})")
       driver.acknowledgeStatusUpdate(status)
     }
+    //driver 指的是 mesos的driver org.apache.mesos.MesosSchedulerDriver
     logger.info("----driverHolder.driver-----:\t" + driverHolder.driver.get)
     Future.successful(())
   }

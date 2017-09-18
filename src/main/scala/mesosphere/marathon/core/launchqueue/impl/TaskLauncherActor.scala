@@ -311,7 +311,7 @@ private class TaskLauncherActor(
 
         if (configChange) {
           log.info(
-            "getting new runSpec for '{}', version {} with {} initial instances",
+            "----TaskLauncherActor.scala>----getting new runSpec for '{}', version {} with {} initial instances",
             runSpec.id, runSpec.version, addCount
           )
 
@@ -319,12 +319,12 @@ private class TaskLauncherActor(
 
         } else {
           log.info(
-            "scaling change for '{}', version {} with {} initial instances",
+            "----TaskLauncherActor.scala>-----scaling change for '{}', version {} with {} initial instances",
             runSpec.id, runSpec.version, addCount
           )
         }
       } else {
-        log.info("add {} instances to {} instances to launch", addCount, instancesToLaunch)
+        log.info("----TaskLauncherActor.scala>---校验-----多task现象----add {} instances to {} instances to launch", addCount, instancesToLaunch)
         instancesToLaunch += addCount
       }
 

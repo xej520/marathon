@@ -176,10 +176,10 @@ private[impl] class OfferMatcherManagerActor private (
   //接收到 匹配过的实例
   private[this] def receiveMatchedInstances: Receive = {
     case OfferMatcher.MatchedInstanceOps(offerId, addedOps, resendOffer) =>
-     log.info("---->OfferMatcherManagerActor.scala<----offerID----:\t" + offerId)
-     log.info("---->OfferMatcherManagerActor.scala<----addedOps----:\n" )
+     log.info("---->OfferMatcherManagerActor.scala<----offerID----:\t" + offerId) // 59105178-40b4-44e3-b772-d7eb4c132e90-O31
+     log.info("---->OfferMatcherManagerActor.scala<----addedOps----:\n" ) // null
       addedOps.foreach(x => println("----> " + x.toString))
-     log.info("---->OfferMatcherManagerActor.scala<----resendOffer----:\t" + resendOffer)
+     log.info("---->OfferMatcherManagerActor.scala<----resendOffer----:\t" + resendOffer) //false
 
       //添加实例 进程
       def processAddedInstances(data: OfferData): OfferData = {
@@ -245,7 +245,7 @@ private[impl] class OfferMatcherManagerActor private (
           "Tune with --launch_tokens/launch_token_refresh_interval.")
       None
     } else {
-      log.info("----->OfferMatcherManagerActor.scala<-------scheduleNextMatcherOrFinish---------\n" + data.nextMatcherOpt)
+      log.info("----->OfferMatcherManagerActor.scala<-------scheduleNextMatcherOrFinish----data.nextMatcherOpt-----\n" + data.nextMatcherOpt)
       data.nextMatcherOpt
     }
 

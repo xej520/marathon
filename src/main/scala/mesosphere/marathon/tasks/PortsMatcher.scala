@@ -95,6 +95,7 @@ class PortsMatcher private[tasks] (
 
   /**
     * Choose random ports from offer.
+    * 从提供的offer里，随机选择端口号
     */
   private[this] def randomPorts(numberOfPorts: Int): Option[Seq[Option[PortWithRole]]] = {
     takeEnoughPortsOrNone(expectedSize = numberOfPorts) {
@@ -154,8 +155,31 @@ class PortsMatcher private[tasks] (
     */
   private[this] def takeEnoughPortsOrNone[T <: Request](
     expectedSize: Int)(ports: Iterator[Option[T]]): Option[Seq[Option[PortWithRole]]] = {
+    //takeWhile,与filter 获取元素，过滤元素的意思
+    //takeWhile用法是，从第一个元素开始取，直到遇到不满足元素，就结束
+    //takeWhile，并不是对所有的元素，进行操作，遇到不满足条件的元素，就会退出的
+    //filter，是对所有的元素，进行操作的
     val allocatedPorts = ports.takeWhile(_.isDefined).take(expectedSize).flatten.toIndexedSeq
-    if (allocatedPorts.size == expectedSize)
+    log.info("-----分配的端口数量-----:\t" + allocatedPorts.size)
+    log.info("-----用户指定的端口数量-----:\t" + expectedSize)
+    allocatedPorts.foreach{x => println("----从提供的端口中----随机获取-----端口-------ports-----:\t" + x)}
+    //x 就是以下的内容,  31341
+    //PortWithRole(marathon_role,31341,Some(principal: "marathon_user"
+    // labels {
+//    labels {
+//      key: "marathon_framework_id"
+//      value: "240d27b8-a2e8-4907-9d6b-1e3a77be59b5-0000"
+//    }
+//    labels {
+//      key: "marathon_task_id"
+//      value: "ftp_lgy007b.d9ed47da-9445-11e7-b746-000c2930224d"
+//    }
+//  }
+//  ))
+
+
+
+  if (allocatedPorts.size == expectedSize)
       Some(allocatedPorts.map {
         case RequestNone => None
         case pr: PortWithRole => Some(pr)

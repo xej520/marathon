@@ -60,8 +60,11 @@ private[impl] class ReviveOffersActor(
 
     if (nextRevive <= now) {
       log.info("=> -------->ReviveOffersActor.scala>-------revive offers NOW, canceling any scheduled revives")
+      //nextReviveCancellableOpt 容器，
       nextReviveCancellableOpt.foreach(_.cancel())
+      //将nextReviveCancellableOpt 容器 注释掉
       nextReviveCancellableOpt = None
+
 
       driverHolder.driver.foreach(_.reviveOffers())
       lastRevive = now
@@ -80,6 +83,9 @@ private[impl] class ReviveOffersActor(
           "=> -------->ReviveOffersActor.scala>-------Schedule next revive at {} in {}, adhering to --{} {} (ms)",
           nextRevive, untilNextRevive, conf.minReviveOffersInterval.name, conf.minReviveOffersInterval())
 
+        //下面这些，是启动marathon时的命令
+        //Vector(--master, zk://master001:2181,master002:2181,master003:2181/mesos, --zk, zk://master001:2181,master002:2181,master003:2181/marathon,
+        // --framework_name, marathon, --mesos_user, root, --mesos_role, marathon_role, --mesos_authentication_principal, marathon_user)
         log.info("-------->ReviveOffersActor.scala>-----conf-------------\n" + conf.args)
 
         nextReviveCancellableOpt = Some(schedulerCheck(untilNextRevive))
@@ -102,6 +108,7 @@ private[impl] class ReviveOffersActor(
   }
 
   private[this] def receiveOffersWantedNotifications: Receive = {
+    //创建task时，第一次会走这里的
     case OffersWanted(true) =>
       log.info("------>ReviveOffersActor.scala<---Received offers WANTED notification")
       offersCurrentlyWanted = true

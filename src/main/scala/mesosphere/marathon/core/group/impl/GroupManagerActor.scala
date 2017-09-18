@@ -129,7 +129,7 @@ private[impl] class GroupManagerActor(
     }
       //gid: 就是组ID号如/ftp, appID号: /ftp/lgy001, 那么gid就是/ftp
       //version 就是当前时间new date
-      //force boolean类型
+      //force boolean类型 false
       //toKill是一个map集合，Map[pathID, Seq] 其实，pathID 就是appID, /ftp/lgy001,
     case GetUpgrade(gid, change, version, force, toKill) => {
         log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetUpgrade(id):\n")
@@ -138,6 +138,8 @@ private[impl] class GroupManagerActor(
         log.info("---------<GroupManagerActor.scala>---version------:\t" + version)
         log.info("---------<GroupManagerActor.scala>---force------:\t" + force)
         log.info("---------<GroupManagerActor.scala>---toKill------:\t" + toKill)
+        log.info("---------<GroupManagerActor.scala>---sender()----:\t" + sender())
+        log.info("---------<GroupManagerActor.scala>---sender()----:\t" + sender().getClass)
         getUpgrade(gid, change, version, force, toKill).pipeTo(sender())
       }
     case GetAllVersions(id) => {
@@ -193,12 +195,14 @@ private[impl] class GroupManagerActor(
         _ <- scheduler.deploy(plan, force)
         _ <- groupRepo.storeRoot(plan.target, plan.createdOrUpdatedApps,
           plan.deletedApps, plan.createdOrUpdatedPods, plan.deletedPods)
+      //Deployment阶段后，才开始，执行下面的语句 1
         _ = log.info(s"------->GroupManagerActor.scala<-------Updated groups/apps/pods according to deployment plan ${plan.id}")
       } yield plan
 
       deployment.onComplete {
         case Success(plan) =>
-          log.info(s"Deployment acknowledged. Waiting to get processed:\n$plan")
+          //Deployment阶段后，才开始，执行下面的语句 2
+          log.info(s"------->GroupManagerActor.scala<------Deployment acknowledged. Waiting to get processed:\n$plan")
           eventBus.publish(GroupChangeSuccess(gid, version.toString))
         case Failure(ex: AccessDeniedException) =>
         // If the request was not authorized, we should not publish an event

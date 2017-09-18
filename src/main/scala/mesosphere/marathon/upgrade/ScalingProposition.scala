@@ -7,9 +7,12 @@ import mesosphere.marathon.state.{ KillSelection, Timestamp }
 
 case class ScalingProposition(tasksToKill: Option[Seq[Instance]], tasksToStart: Option[Int])
 
+//Proposition 建议，提议，主张
+//ScalingProposition 扩容建议
 object ScalingProposition {
 
   //定义一个函数propose
+  //建议
   def propose(
     runningTasks: Seq[Instance],
     toKill: Option[Seq[Instance]],
@@ -21,7 +24,8 @@ object ScalingProposition {
     //计算一下，正在运行的task里，状态是killing的个数
     val killingTaskCount = runningTasks.count(_.state.condition == Condition.Killing)
     //打印出 正在运行的task数量，
-    println("------<ScalingProposition.scala>------->runningTasks.size\t" + runningTasks.size)
+    println("------<ScalingProposition.scala>----正在运行的task数量--->runningTasks.size\t" + runningTasks.size)
+    println("-----打印出-----当前---运行的----task-----信息-------")
     runningTasks.foreach{
       x => println(x + " ")
     }
@@ -39,7 +43,6 @@ object ScalingProposition {
         toKillMap.contains(k)
     }
     // overall number of tasks that need to be killed
-
     println("------<ScalingProposition.scala>------overall---num---task----runningTasks.size---" + runningTasks.size)
     println("------<ScalingProposition.scala>------overall---num---task----killingTaskCount----" + killingTaskCount)
     println("------<ScalingProposition.scala>------overall---num---task----scaleTo-------------" + scaleTo)

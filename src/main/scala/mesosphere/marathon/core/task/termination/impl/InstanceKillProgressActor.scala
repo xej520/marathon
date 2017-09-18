@@ -58,7 +58,7 @@ private[this] class InstanceKillProgressActor(
     log.debug("Received terminal update for {}", id)
     instanceIds.remove(id)
     if (instanceIds.isEmpty) {
-      log.info("All instances watched by {} are killed, completing promise", name)
+      log.info("---->InstanceKillProgressActor.scala<----All instances watched by {} are killed, completing promise", name)
       val success = promise.tryComplete(Try(Done))
       if (!success) log.error("Promise has already been completed in {}", name)
       context.stop(self)

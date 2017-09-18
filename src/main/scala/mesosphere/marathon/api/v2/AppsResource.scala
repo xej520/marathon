@@ -99,6 +99,10 @@ class AppsResource @Inject() (
       //根据appID 以及appVersion生成一个DeploymentPlan
       //plan  类型就是  DeploymentPlan
       //异步 +  阻塞的方式  去获取plan
+      //Deployment Plan 阶段，主要完成的工作：
+      //1、确定task部署在哪个节点上，
+      //2、已经初始化号taskID, 端口号
+      //Deployment是阻塞模式，完成不了，不会进入下一个阶段
       val plan = result(groupManager.updateApp(app.id, createOrThrow, app.version, force))
       println("---------<<AppsResource.scala>>-----------------result()-------end-----------------------")
 
@@ -180,6 +184,7 @@ class AppsResource @Inject() (
         case Some(group) =>
           checkAuthorization(ViewGroup, group)
           val appsWithTasks = result(appInfoService.selectAppsInGroup(groupId, authzSelector, resolvedEmbed))
+          println("---<AppsResource.scala>--定时校验----大概--每5秒钟---就会执行---一次--appsWithTasks------:\t" + appsWithTasks)
           ok(jsonObjString("*" -> appsWithTasks))
         case None =>
           unknownGroup(groupId)
@@ -190,13 +195,17 @@ class AppsResource @Inject() (
       result(appInfoService.selectApp(appId, authzSelector, resolvedEmbed)) match {
         case Some(appInfo) =>
           checkAuthorization(ViewRunSpec, appInfo.app)
+          println("----<AppsResource.scala>----appInfo.app.taskSize------:\t" + appInfo.app.instances)
           ok(jsonObjString("app" -> appInfo))
         case None => unknownApp(appId)
       }
     }
 
     id match {
-      case ListApps(gid) => transitiveApps(gid.toRootPath)
+      case ListApps(gid) => {
+        println("---<AppsResource.scala>--定时校验----大概--每5秒钟---就会执行---一次-----：列出当前App------")
+        transitiveApps(gid.toRootPath)
+      }
       case _ => app(id.toRootPath)
     }
   }
@@ -436,14 +445,14 @@ class AppsResource @Inject() (
   }
 
   private def maybePostEvent(req: HttpServletRequest, app: AppDefinition) = {
-
+    //getRemoteAddr 远端地址，应该就是，客户端申请地址，如物理机
     println("-------<AppsResources.scala>------------req.getRemoteAddr------1--------:\n" + req.getRemoteAddr)
+    //restfull 请求，就是marathonAPI的/v2/apps
     println("-------<AppsResources.scala>----------------req.getRequestURI------2--------:\n" + req.getRequestURI)
     println("-------<AppsResources.scala>---------------post提交事件--------------:\n" + ApiPostEvent(req.getRemoteAddr, req.getRequestURI, app))
     //    ApiPostEvent(
     // 172.16.91.77,/v2/apps,
     // AppDefinition(/ftp/lgy002b,Some(while [ true ] ; do echo 'Hello Marathon, Hello spark' ; sleep 5 ; done),List(),None,Map(),1,Resources(0.1,128.0,0.0,0),,Set(),List(),List(),List(PortDefinition(10034,tcp,None,Map())),false,BackoffStrategy(1 second,3600 seconds,1.15),Some(Mesos(List(PersistentVolume(ftp_data,PersistentVolumeInfo(10,None,root,Set()),RW)))),Set(),List(),None,Set(),UpgradeStrategy(0.0,0.0),Map(),Set(),None,OnlyVersion(2017-08-29T01:02:58.569Z),Some(Residency(10,WAIT_FOREVER)),Map(),UnreachableDisabled,YoungestFirst),api_post_event,2017-08-29T01:02:58.975Z)
-    println("-------<AppsResources.scala>-----eventBus-----:\n" + eventBus.toString)
 
     //很明显，下面又是创建了一的对象实例啊ApiPostEvent
     val apiPostEvent = ApiPostEvent(req.getRemoteAddr, req.getRequestURI, app)

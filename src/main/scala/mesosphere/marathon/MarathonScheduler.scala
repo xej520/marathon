@@ -99,7 +99,7 @@ class MarathonScheduler @Inject() (
   }
 
   override def slaveLost(driver: SchedulerDriver, slave: SlaveID): Unit = {
-    log.info(s"Lost slave $slave")
+    log.info(s"---->MarathonScheduler.scala<-----Lost slave $slave")
   }
 
   override def executorLost(

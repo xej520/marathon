@@ -46,6 +46,7 @@ class TaskKiller @Inject() (
           val launchedInstances = foundInstances.filter(_.isLaunched)
 
           if (wipe) {
+            log.info("----<TaskKiller.scala>-----删除task----擦除---持久卷-----------")
             val done1 = await(expunge(foundInstances))
             val done2 = await(killService.killInstances(launchedInstances, KillReason.KillingTasksViaApi))
           } else {
@@ -61,6 +62,7 @@ class TaskKiller @Inject() (
     }
   }
 
+  //expunge 删除
   private[this] def expunge(instances: Seq[Instance]): Future[Done] = {
     // Note: We process all instances sequentially.
 

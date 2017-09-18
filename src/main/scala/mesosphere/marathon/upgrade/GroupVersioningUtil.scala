@@ -24,6 +24,7 @@ object GroupVersioningUtil {
     def updateAppVersionInfo(maybeOldApp: Option[AppDefinition], newApp: AppDefinition): AppDefinition = {
       val newVersionInfo = maybeOldApp match {
         case None =>
+          //创建过程，第一次，会走这个分支的
           log.info(s"[${newApp.id}]: ------>GroupVersioningUtil.scala<-----new app detected")
           VersionInfo.forNewConfig(newVersion = version)
         case Some(oldApp) =>

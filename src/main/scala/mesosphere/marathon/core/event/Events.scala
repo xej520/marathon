@@ -15,6 +15,9 @@ import play.api.libs.json.Json
 
 import scala.collection.immutable.Seq
 
+/**
+  * 定义的marathon事件类型
+  */
 sealed trait MarathonEvent {
   val eventType: String
   val timestamp: String

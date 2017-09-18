@@ -196,7 +196,7 @@ class DeploymentManager(
       //开始启动部署actor
     case LaunchDeploymentActor(plan, origSender) if isScheduledDeployment(plan.id) =>
       log.info("-------->DeploymentManager.scala<-----plan.id.boolean------:\t" + isScheduledDeployment(plan.id) + ";\t plan.id:\t" + plan.id)
-      log.info("-------->DeploymentManager.scala<------plan-----------------------\n" + plan)
+      log.info("---------------------------\n" + plan)
       log.info(s"---->DeploymentManager.scala<------Launching DeploymentActor for ${plan.id}")
       startDeployment(plan, origSender)
 
@@ -247,6 +247,7 @@ class DeploymentManager(
 
     //async用来标记一块异步执行的代码，通常这块代码中包括一个或者多个await调用，
     async {
+      //异步存储Deployment计划
       await(deploymentRepository.store(plan))
       log.info(s"------>DeploymentManager.scala<------Stored new deployment plan ${plan.id}")
 

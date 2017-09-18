@@ -56,6 +56,7 @@ private[reconcile] class OfferMatcherReconciler(instanceTracker: InstanceTracker
   /**
     * Generate auxiliary instance operations for an offer based on current instance status.
     * For example, if an instance is no longer required then any resident resources it's using should be released.
+    * 例如，如果一个实例，不再需要的话，那么，资源需要释放掉的
     */
   private[this] def processResourcesByTaskId(
     offer: Offer, resourcesByTaskId: Map[Task.Id, Seq[Resource]]): Future[MatchedInstanceOps] =
@@ -73,6 +74,8 @@ private[reconcile] class OfferMatcherReconciler(instanceTracker: InstanceTracker
           val instanceOps: Seq[InstanceOpWithSource] = resourcesByTaskId.collect {
             case (taskId, spuriousResources) if spurious(taskId.instanceId) =>
               val unreserveAndDestroy =
+                // 从名字中，可以看出来，针对实例的工具类
+                // 不再保存并且销毁掉持久卷
                 InstanceOp.UnreserveAndDestroyVolumes(
                   stateOp = InstanceUpdateOperation.ForceExpunge(taskId.instanceId),
                   oldInstance = instancesBySpec.instance(taskId.instanceId),

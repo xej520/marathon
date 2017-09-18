@@ -115,7 +115,7 @@ private[impl] class KillServiceActor(
       log.debug("Subscribing {} to events.", name)
       context.system.eventStream.subscribe(progressActor, classOf[InstanceChanged])
       context.system.eventStream.subscribe(progressActor, classOf[UnknownInstanceTerminated])
-      log.info("Starting {} to track kill progress of {} instances", name, instanceIds.size)
+      log.info("---->KillServiceActor.scala<-----Starting {} to track kill progress of {} instances", name, instanceIds.size)
     } else {
       promise.tryComplete(Try(Done))
       log.info("No instances to watch for, so not setting up progress actor.")
@@ -126,7 +126,7 @@ private[impl] class KillServiceActor(
     val killCount = config.killChunkSize - inFlight.size
     val toKillNow = instancesToKill.take(killCount)
 
-    log.info("processing {} kills", toKillNow.size)
+    log.info("----->KillServiceActor.scala<-----processing {} kills", toKillNow.size)
     toKillNow.foreach {
       case (instanceId, data) => processKill(data)
     }

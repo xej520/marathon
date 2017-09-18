@@ -49,6 +49,7 @@ class AppStartActor(
 
   //
   def success(): Unit = {
+    //runSpec.id 就是appID, 如 /ftp/lgy007b
     logger.info(s"----->AppStartActor.scala>-------Successfully started $scaleTo instances of ${runSpec.id}")
     promise.success(())
     context.stop(self)

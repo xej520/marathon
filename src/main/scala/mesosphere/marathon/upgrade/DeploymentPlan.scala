@@ -137,7 +137,6 @@ case class DeploymentPlan(
     def specString(spec: RunSpec): String = spec match {
       case app: AppDefinition => appString(app)
       case pod: PodDefinition => podString(pod)
-
     }
     def podString(pod: PodDefinition): String = {
       val containers = pod.containers.map(containerString).mkString(", ")
