@@ -55,7 +55,7 @@ trait StartingBehavior extends ReadinessBehavior { this: Actor =>
       log.debug(s"Sync start instancesToStartNow=$instancesToStartNow appId=${runSpec.id}")
       if (instancesToStartNow > 0) {
         log.info(s"Reconciling app ${runSpec.id} scaling: queuing $instancesToStartNow new instances")
-        log.info(s"-----<StartingBehavior.scala>--------列出正在运行的-----app:${launchQueue.listRunSpecs}")
+        log.info(s"-----<StartingBehavior.scala>----用户指定的----列出正在运行的-----app:${launchQueue.listRunSpecs}")
         launchQueue.add(runSpec, instancesToStartNow)
       }
       log.info(s"-----<StartingBehavior.scala>----marathon-----周期性的---定时校验---------")
@@ -66,9 +66,9 @@ trait StartingBehavior extends ReadinessBehavior { this: Actor =>
   }
 
   override def instanceConditionChanged(instanceId: Instance.Id): Unit = {
-    log.debug(s"New instance $instanceId changed during app ${runSpec.id} scaling, " +
+    log.info(s"New instance $instanceId changed during app ${runSpec.id} scaling, " +
+      s"${readyInstances.size} ready ${healthyInstances.size} healthy need $nrToStart")
     checkFinished()
-    s"${readyInstances.size} ready ${healthyInstances.size} healthy need $nrToStart")
   }
 
   def checkFinished(): Unit = {
