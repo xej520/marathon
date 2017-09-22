@@ -130,7 +130,7 @@ class TasksResource @Inject() (
     @Context req: HttpServletRequest): Response = authenticated(req) { implicit identity =>
 
     if (scale && wipe) throw new BadRequestException("You cannot use scale and wipe at the same time.")
-
+  println("------------killTasks-----------------:\t" + scale + " : " + force + " : " + wipe)
     val taskIds = (Json.parse(body) \ "ids").as[Set[String]]
     val tasksIdToAppId: Map[Instance.Id, PathId] = taskIds.map { id =>
       try { Task.Id(id).instanceId -> Task.Id.runSpecId(id) }

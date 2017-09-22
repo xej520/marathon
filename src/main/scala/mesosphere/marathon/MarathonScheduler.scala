@@ -67,6 +67,7 @@ class MarathonScheduler @Inject() (
   }
 
   //更新状态
+  //app 缩容时，会调用这个方法
   override def statusUpdate(driver: SchedulerDriver, status: TaskStatus): Unit = {
     log.info("----->MarathonScheduler.scala<-----Received status update for task %s: %s (%s)"
       .format(status.getTaskId.getValue, status.getState, status.getMessage))

@@ -13267,8 +13267,10 @@ public final class Protos {
     }
 
     private void initFields() {
-      inactiveAfterSeconds_ = 900L;
-      expungeAfterSeconds_ = 604800L;
+//      inactiveAfterSeconds_ = 900L;
+//      expungeAfterSeconds_ = 604800L;
+        inactiveAfterSeconds_ = 1L;
+        expungeAfterSeconds_ = 1L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {

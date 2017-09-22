@@ -102,8 +102,9 @@ object InstanceTracker {
     * @param specId The id of the app.
     * @param instanceMap The tasks of this app by task ID. FIXME: change keys to Task.TaskID
     */
-  case class SpecInstances(specId: PathId, instanceMap: Map[Instance.Id, Instance] = Map.empty) {
 
+  case class SpecInstances(specId: PathId, instanceMap: Map[Instance.Id, Instance] = Map.empty) {
+    println(s"----<InstanceTracker.scala>----specId:${specId},-----instanceMap:\t${instanceMap}")
     def isEmpty: Boolean = instanceMap.isEmpty
     def contains(taskId: Instance.Id): Boolean = instanceMap.contains(taskId)
     def instances: Seq[Instance] = instanceMap.values.to[Seq]

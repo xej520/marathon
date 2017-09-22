@@ -32,8 +32,8 @@ case class UnreachableEnabled(
 object UnreachableEnabled {
 //  val DefaultInactiveAfter: FiniteDuration = 5.minutes
 //  val DefaultExpungeAfter: FiniteDuration = 10.minutes
-  val DefaultInactiveAfter: FiniteDuration = 1.minutes
-  val DefaultExpungeAfter: FiniteDuration = 2.minutes
+  val DefaultInactiveAfter: FiniteDuration = 1.seconds
+  val DefaultExpungeAfter: FiniteDuration = 1.seconds
   val default = UnreachableEnabled()
 
   implicit val unreachableEnabledValidator = validator[UnreachableEnabled] { strategy =>

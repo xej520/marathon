@@ -35,9 +35,7 @@ class AppStartActor(
     // with the correct version those will not be killed.
     //计算一下，instance处于running状态的，有多少个
     val runningInstances = currentInstances.count(_.isActive)
-    logger.info("------>AppStartActor.scala<---nrToStart----\t" + nrToStart)
-    logger.info("------>AppStartActor.scala<---runningInstances----\t" + runningInstances)
-    logger.info("------>AppStartActor.scala<---runSpec----\n" + runSpec)
+    logger.info(s"------>AppStartActor.scala<---nrToStart----nrToStart: $nrToStart, ----runningInstances: $runningInstances,-----runSpec:$runSpec")
     scheduler.startRunSpec(runSpec.withInstances(Math.max(runningInstances, nrToStart)))
     Done
   }
@@ -50,6 +48,7 @@ class AppStartActor(
   //
   def success(): Unit = {
     //runSpec.id 就是appID, 如 /ftp/lgy007b
+    //好像每隔一段时间，就会调用的
     logger.info(s"----->AppStartActor.scala>-------Successfully started $scaleTo instances of ${runSpec.id}")
     promise.success(())
     context.stop(self)

@@ -5,10 +5,11 @@ import mesosphere.marathon.core.instance.update.{ InstanceUpdateEffect, Instance
 import scala.concurrent.Future
 
 /**
+  * 处理InstanceUpdateOperations的进程，
   * Handles the processing of InstanceUpdateOperations. These might originate from
-  * * Creating an instance
+  * * Creating an instance//创建一个实例
   * * Updating an instance (due to a state change, a timeout, a mesos update)
-  * * Expunging an instance
+  * * Expunging an instance//消除一个实例
   */
 trait TaskStateOpProcessor {
   /** Process an InstanceUpdateOperation and propagate its result. */

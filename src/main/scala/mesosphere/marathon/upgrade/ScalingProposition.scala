@@ -27,7 +27,7 @@ object ScalingProposition {
     println("------<ScalingProposition.scala>----正在运行的task数量--->runningTasks.size\t" + runningTasks.size)
     println("-----打印出-----当前---运行的----task-----信息-------")
     runningTasks.foreach{
-      x => println(x + " ")
+      x => println("------> "+ x + " ")
     }
     //打印出 打算killing的task数量
     println("------<ScalingProposition.scala>------->killingTaskCount\t" + killingTaskCount)
@@ -74,18 +74,17 @@ object ScalingProposition {
     //take 取出集合ordered里的前killCount个元素
     //这些instance，是打算要删除的；也就是候选的意思
     val candidatesToKill = ordered.take(killCount)
-
     println("------<ScalingProposition.scala>-----scaleTo----:\t" + scaleTo)
     println("------<ScalingProposition.scala>-----runningTasks.size----:\t" + runningTasks.size)
     println("------<ScalingProposition.scala>-----killCount----:\t" + killCount)
     //numberOfTasksToStart 表达的意思，应该是，从那个位置开始删除task
     val numberOfTasksToStart = scaleTo - runningTasks.size + killCount
     println("------<ScalingProposition.scala>-----numberOfTasksToStart----:\t" + numberOfTasksToStart)
-
     //candidatesToKill，判断打算要删除的task集合是否为空，不为空的话，说明，有的task需要删掉的
+    //tasksToKill 缩容操作时，会有值的
     val tasksToKill = if (candidatesToKill.nonEmpty) Some(candidatesToKill) else None
+    //创建时，会有值的
     val tasksToStart = if (numberOfTasksToStart > 0) Some(numberOfTasksToStart) else None
-
     println("-----------<ScalingProposition.scala>-----tasksToKill-----\t" + tasksToKill) //None
     println("-----------<ScalingProposition.scala>-----tasksToStart---\t" + tasksToStart)  //None， Some(1) 需要运行1个实例
 

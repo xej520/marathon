@@ -169,15 +169,16 @@ case class DeploymentPlan(
             // YoungestFirst)
             // UnreachableDisabled
       //scale:表示缩容个数，开始时为0
+      // 创建时，第一次，会调用这个
       case StartApplication(spec, scale) => {
         val startApplication = s"Start(${specString(spec)}, instances=$scale)"
-        println("---------->DeploymentPlan<----startApp----\n" + startApplication + "\n--->spec\t" + spec + "\n-----scale--->\t" + scale)
+        println("---------->DeploymentPlan<----startApp----\n" + startApplication + "\n===DeploymentPlan====>spec\t" + spec + "\n-----scale--->\t" + scale)
         startApplication
       }
       case StopApplication(spec) => {
 
         val stopApp = s"Stop(${specString(spec)})"
-        println("---------->DeploymentPlan<----stopApp----\n" + stopApp + "\n--->spec\t" + spec)
+        println("---------->DeploymentPlan<----stopApp----\n" + stopApp + "\n+++DeploymentPlan+++>spec\t" + spec)
         stopApp
       }
       case ScaleApplication(spec, scale, toKill) =>{
@@ -185,7 +186,7 @@ case class DeploymentPlan(
         val killTasksString =
         toKill.withFilter(_.nonEmpty).map(", killTasks=" + _.map(_.instanceId.idString).mkString(",")).getOrElse("")
 
-        println("---------->DeploymentPlan<----scaleApp----\n" + "------>killTasksString:\t" +killTasksString + "\n--->spec\t" + spec + "\n-----scale-->\t" + scale + "\n----toKill---->\t" + toKill)
+        println("---------->DeploymentPlan<----scaleApp----\n" + "------>killTasksString:\t" +killTasksString + "\n-----DeploymentPlan---->spec\t" + spec + "\n-----scale-->\t" + scale + "\n----toKill---->\t" + toKill)
 
         s"Scale(${appString(spec)}, instances=$scale$killTasksString)"
       }

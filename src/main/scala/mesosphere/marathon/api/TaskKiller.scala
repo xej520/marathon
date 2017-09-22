@@ -63,12 +63,13 @@ class TaskKiller @Inject() (
   }
 
   //expunge 删除
+  //页面上调用删除task(含有持久卷)时，调用的就是此方法
   private[this] def expunge(instances: Seq[Instance]): Future[Done] = {
     // Note: We process all instances sequentially.
-
     instances.foldLeft(Future.successful(Done)) { (resultSoFar, nextInstance) =>
       resultSoFar.flatMap { _ =>
-        log.info("Expunging {}", nextInstance.instanceId)
+          //nextInstance.instanceId 指的 就是taskId, ftp_lgy008c.marathon-92f839d4-9c4f-11e7-9ec8-000c2930224d
+        log.info("---->TaskKiller.scala----Expunging {}", nextInstance.instanceId)
         stateOpProcessor.process(InstanceUpdateOperation.ForceExpunge(nextInstance.instanceId)).map(_ => Done).recover {
           case NonFatal(cause) =>
             log.info("Failed to expunge {}, got: {}", Array[Object](nextInstance.instanceId, cause): _*)

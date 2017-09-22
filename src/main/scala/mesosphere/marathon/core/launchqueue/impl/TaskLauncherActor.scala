@@ -100,6 +100,7 @@ private class TaskLauncherActor(
 
   private[this] val startedAt = clock.now()
 
+  //actor初始化时，会默认执行这个的
   override def preStart(): Unit = {
     super.preStart()
 
@@ -109,8 +110,7 @@ private class TaskLauncherActor(
 
     instanceMap = instanceTracker.instancesBySpecSync.instancesMap(runSpec.id).instanceMap
     log.info("----->TaskLauncherActor.scala<------获取---instance-------\n"+ instanceMap.get(runSpec.id))
-    log.info("------>TaskLauncherActor.scala>-----runSpec--------\n" )
-    log.info("{}", runSpec)
+    log.info("----->TaskLauncherActor.scala<-----{}", runSpec)
     rateLimiterActor ! RateLimiterActor.GetDelay(runSpec)
   }
 
@@ -275,6 +275,7 @@ private class TaskLauncherActor(
           log.debug("receiveInstanceUpdate: {} is {}", update.id, update.condition)
           instanceMap += update.id -> update.instance
 
+          //页面上 删除task(持久卷)时，就会调用这个
         case update: InstanceDeleted =>
           log.info("receiveInstanceUpdate: {} was deleted ({})", update.id, update.condition)
           removeInstance(update.id)
@@ -291,9 +292,11 @@ private class TaskLauncherActor(
       sender() ! Done
   }
 
+  //很明显，就是从缓存里，将task删除了相关信息，也就是注册信息
   private[this] def removeInstance(instanceId: Instance.Id): Unit = {
     inFlightInstanceOperations.get(instanceId).foreach(_.cancel())
     inFlightInstanceOperations -= instanceId
+    log.info("---------<TaskLauncherActor.scala>----删除task---后---从缓存里----移除相关信息-----")
     instanceMap -= instanceId
   }
 
@@ -325,7 +328,7 @@ private class TaskLauncherActor(
         }
       } else {
         log.info("----TaskLauncherActor.scala>---校验-----多task现象----add {} instances to {} instances to launch", addCount, instancesToLaunch)
-        instancesToLaunch += addCount
+//        instancesToLaunch += addCount
       }
 
       OfferMatcherRegistration.manageOfferMatcherStatus()

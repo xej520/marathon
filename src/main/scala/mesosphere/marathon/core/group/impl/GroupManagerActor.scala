@@ -105,10 +105,15 @@ private[impl] class GroupManagerActor(
   override def receive: Receive = {
     case GetRunSpecWithId(id) => {
       log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetRunSpecWithId(id):\t" + id)
+      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----getRunSpec(id):\t" + getRunSpec(id))
       getRunSpec(id).pipeTo(sender())
     }
+      //marathon 自己有定时器，大概每隔5秒钟，会执行下面的分支
     case GetAppWithId(id) => {
+      log.info("------------------------------------------1----------------------------------------------")
       log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetAppWithId(id):\t" + id)
+      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----getApp(id):\t" + getApp(id))
+      log.info("------------------------------------------2----------------------------------------------")
       getApp(id).pipeTo(sender())
     }
     case GetPodWithId(id) =>{
@@ -130,15 +135,9 @@ private[impl] class GroupManagerActor(
       //gid: 就是组ID号如/ftp, appID号: /ftp/lgy001, 那么gid就是/ftp
       //version 就是当前时间new date
       //force boolean类型 false
-      //toKill是一个map集合，Map[pathID, Seq] 其实，pathID 就是appID, /ftp/lgy001,
+      //toKill是一个map集合，Map[pathID, Seq] 其实，pathID 就是appID, /ftp/lgy001,  如 Map(/ftp/xej002 -> List())
     case GetUpgrade(gid, change, version, force, toKill) => {
-        log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetUpgrade(id):\n")
-        log.info("---------<GroupManagerActor.scala>---gid------:\t" + gid)
-        log.info("---------<GroupManagerActor.scala>---change------:\t" + change)
-        log.info("---------<GroupManagerActor.scala>---version------:\t" + version)
-        log.info("---------<GroupManagerActor.scala>---force------:\t" + force)
-        log.info("---------<GroupManagerActor.scala>---toKill------:\t" + toKill)
-        log.info("---------<GroupManagerActor.scala>---sender()----:\t" + sender())
+        log.info(s"---------<GroupManagerActor.scala>---gid:\t{}\n---change: {}\n----version:{}\n----force:{}\n----toKill:{}\n", gid, change,version,force,toKill)
         log.info("---------<GroupManagerActor.scala>---sender()----:\t" + sender().getClass)
         getUpgrade(gid, change, version, force, toKill).pipeTo(sender())
       }

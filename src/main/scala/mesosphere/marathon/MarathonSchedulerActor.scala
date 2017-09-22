@@ -2,48 +2,49 @@ package mesosphere.marathon
 
 import akka.Done
 import akka.actor._
-import akka.event.{ EventStream, LoggingReceive }
+import akka.event.{EventStream, LoggingReceive}
 import akka.stream.Materializer
 import mesosphere.marathon.MarathonSchedulerActor.ScaleRunSpec
-import mesosphere.marathon.core.election.{ ElectionService, LocalLeadershipEvent }
-import mesosphere.marathon.core.event.{ AppTerminatedEvent, DeploymentFailed, DeploymentSuccess }
+import mesosphere.marathon.core.election.{ElectionService, LocalLeadershipEvent}
+import mesosphere.marathon.core.event.{AppTerminatedEvent, DeploymentFailed, DeploymentSuccess}
 import mesosphere.marathon.core.health.HealthCheckManager
 import mesosphere.marathon.core.instance.Instance
 import mesosphere.marathon.core.instance.Instance.AgentInfo
 import mesosphere.marathon.core.launchqueue.LaunchQueue
 import mesosphere.marathon.core.task.Task
-import mesosphere.marathon.core.task.termination.{ KillReason, KillService }
+import mesosphere.marathon.core.task.termination.{KillReason, KillService}
 import mesosphere.marathon.core.task.tracker.InstanceTracker
-import mesosphere.marathon.state.{ PathId, RunSpec }
+import mesosphere.marathon.state.{PathId, RunSpec}
 import mesosphere.marathon.storage.repository.GroupRepository
 import mesosphere.marathon.stream._
 import mesosphere.marathon.upgrade.DeploymentManager._
-import mesosphere.marathon.upgrade.{ DeploymentManager, DeploymentPlan, ScalingProposition }
+import mesosphere.marathon.upgrade.{DeploymentManager, DeploymentPlan, ScalingProposition}
 import mesosphere.marathon.util._
 import mesosphere.mesos.Constraints
 import org.apache.mesos
-import org.apache.mesos.Protos.{ Status, TaskState }
+import org.apache.mesos.Protos.{Status, TaskState}
 import org.apache.mesos.SchedulerDriver
 import org.slf4j.LoggerFactory
 
-import scala.async.Async.{ async, await }
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.async.Async.{async, await}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 class LockingFailedException(msg: String) extends Exception(msg)
 
-class MarathonSchedulerActor private (
-  createSchedulerActions: ActorRef => SchedulerActions,
-  deploymentManagerProps: SchedulerActions => Props,
-  historyActorProps: Props,
-  healthCheckManager: HealthCheckManager,
-  killService: KillService,
-  launchQueue: LaunchQueue,
-  marathonSchedulerDriverHolder: MarathonSchedulerDriverHolder,
-  electionService: ElectionService,
-  eventBus: EventStream)(implicit val mat: Materializer) extends Actor
-    with ActorLogging with Stash {
+class MarathonSchedulerActor private(
+                                      createSchedulerActions: ActorRef => SchedulerActions,
+                                      deploymentManagerProps: SchedulerActions => Props,
+                                      historyActorProps: Props,
+                                      healthCheckManager: HealthCheckManager,
+                                      killService: KillService,
+                                      launchQueue: LaunchQueue,
+                                      marathonSchedulerDriverHolder: MarathonSchedulerDriverHolder,
+                                      electionService: ElectionService,
+                                      eventBus: EventStream)(implicit val mat: Materializer) extends Actor
+  with ActorLogging with Stash {
+
   import context.dispatcher
   import mesosphere.marathon.MarathonSchedulerActor._
 
@@ -85,7 +86,7 @@ class MarathonSchedulerActor private (
 
   def receive: Receive = suspended
 
-  def suspended: Receive = LoggingReceive.withLabel("suspended"){
+  def suspended: Receive = LoggingReceive.withLabel("suspended") {
     case LocalLeadershipEvent.ElectedAsLeader =>
       log.info("------------------Starting scheduler actor------------------")
       deploymentManager ! LoadDeploymentsOnLeaderElection
@@ -108,7 +109,22 @@ class MarathonSchedulerActor private (
 
     case _ => stash()
   }
-// 统计一下，started一共有多少中情况，也就是说，一共有多少case情况哈
+
+  // 统计一下，started一共有多少中情况，也就是说，一共有多少case情况哈
+  //LocalLeadershipEvent.Standby
+  //LocalLeadershipEvent.ElectedAsLeader
+  //ReconcileTasks
+  //ReconcileFinished
+  //ReconcileHealthChecks
+  //ScaleRunSpecs
+  //CancelDeployment
+  //Deploy(plan, force)
+  //KillTasks(runSpecId, tasks)
+  //DeploymentFinished(plan)
+  //DeploymentManager.DeploymentFailed(plan, reason)
+  //RunSpecScaled(id)
+  //TasksKilled(runSpecId, _)
+  //RetrieveRunningDeployments
   def started: Receive = LoggingReceive.withLabel("started") {
     case LocalLeadershipEvent.Standby =>
       log.info("-----------Suspending scheduler actor------------------")
@@ -156,9 +172,10 @@ class MarathonSchedulerActor private (
 
     case ScaleRunSpecs => schedulerActions.scaleRunSpec()
 
-    case cmd @ ScaleRunSpec(runSpecId) =>
+    case cmd@ScaleRunSpec(runSpecId) =>
       log.debug("Receive scale run spec for {}", runSpecId)
       val origSender = sender()
+
       @SuppressWarnings(Array("all")) /* async/await */
       def scaleAndAnswer(): Done = {
         val res: Future[Done] = async {
@@ -175,16 +192,20 @@ class MarathonSchedulerActor private (
         }
         Done
       }
-      withLockFor(runSpecId) { scaleAndAnswer() }
+
+      withLockFor(runSpecId) {
+        scaleAndAnswer()
+      }
 
     case cmd: CancelDeployment =>
       deploymentManager forward cmd
 
-    case cmd @ Deploy(plan, force) =>
+    case cmd@Deploy(plan, force) =>
       deploy(sender(), cmd)
 
-    case cmd @ KillTasks(runSpecId, tasks) =>
+    case cmd@KillTasks(runSpecId, tasks) =>
       val origSender = sender()
+
       @SuppressWarnings(Array("all")) /* async/await */
       def killTasks(): Done = {
         log.debug("Received kill tasks {} of run spec {}", tasks, runSpecId)
@@ -201,7 +222,10 @@ class MarathonSchedulerActor private (
         }
         Done
       }
-      withLockFor(runSpecId) { killTasks() }
+
+      withLockFor(runSpecId) {
+        killTasks()
+      }
 
     case DeploymentFinished(plan) =>
       removeLocks(plan.affectedRunSpecIds)
@@ -241,6 +265,7 @@ class MarathonSchedulerActor private (
   }
 
   def removeLocks(runSpecIds: Set[PathId]): Unit = runSpecIds.foreach(removeLock)
+
   def removeLock(runSpecId: PathId): Unit = {
     if (lockedRunSpecs.contains(runSpecId)) {
       val locks = lockedRunSpecs(runSpecId) - 1
@@ -249,6 +274,7 @@ class MarathonSchedulerActor private (
   }
 
   def addLocks(runSpecIds: Set[PathId]): Unit = runSpecIds.foreach(addLock)
+
   def addLock(runSpecId: PathId): Unit = lockedRunSpecs(runSpecId) += 1
 
   /**
@@ -298,15 +324,15 @@ class MarathonSchedulerActor private (
 object MarathonSchedulerActor {
   @SuppressWarnings(Array("MaxParameters"))
   def props(
-    createSchedulerActions: ActorRef => SchedulerActions,
-    deploymentManagerProps: SchedulerActions => Props,
-    historyActorProps: Props,
-    healthCheckManager: HealthCheckManager,
-    killService: KillService,
-    launchQueue: LaunchQueue,
-    marathonSchedulerDriverHolder: MarathonSchedulerDriverHolder,
-    electionService: ElectionService,
-    eventBus: EventStream)(implicit mat: Materializer): Props = {
+             createSchedulerActions: ActorRef => SchedulerActions,
+             deploymentManagerProps: SchedulerActions => Props,
+             historyActorProps: Props,
+             healthCheckManager: HealthCheckManager,
+             killService: KillService,
+             launchQueue: LaunchQueue,
+             marathonSchedulerDriverHolder: MarathonSchedulerDriverHolder,
+             electionService: ElectionService,
+             eventBus: EventStream)(implicit mat: Materializer): Props = {
     Props(new MarathonSchedulerActor(
       createSchedulerActions,
       deploymentManagerProps,
@@ -351,9 +377,13 @@ object MarathonSchedulerActor {
   case object RetrieveRunningDeployments
 
   sealed trait Event
+
   case class RunSpecScaled(runSpecId: PathId) extends Event
+
   case object TasksReconciled extends Event
+
   case class DeploymentStarted(plan: DeploymentPlan) extends Event
+
   case class TasksKilled(runSpecId: PathId, taskIds: Seq[Instance.Id]) extends Event
 
   case class RunningDeployments(plans: Seq[DeploymentStepInfo])
@@ -361,16 +391,17 @@ object MarathonSchedulerActor {
   case class CommandFailed(cmd: Command, reason: Throwable) extends Event
 
   case object CancellationTimeoutExceeded
+
 }
 
 class SchedulerActions(
-    groupRepository: GroupRepository,
-    healthCheckManager: HealthCheckManager,
-    instanceTracker: InstanceTracker,
-    launchQueue: LaunchQueue,
-    eventBus: EventStream,
-    val schedulerActor: ActorRef,
-    val killService: KillService)(implicit ec: ExecutionContext) {
+                        groupRepository: GroupRepository,
+                        healthCheckManager: HealthCheckManager,
+                        instanceTracker: InstanceTracker,
+                        launchQueue: LaunchQueue,
+                        eventBus: EventStream,
+                        val schedulerActor: ActorRef,
+                        val killService: KillService)(implicit ec: ExecutionContext) {
 
   private[this] val log = LoggerFactory.getLogger(getClass)
 
@@ -378,8 +409,8 @@ class SchedulerActions(
 
   def startRunSpec(runSpec: RunSpec): Unit = {
     //runSpec.id 就是appID , 如 /ftp/lgy007b
-    log.info(s"----->SchedulerActions.scala>-----Starting runSpec ${runSpec.id}")
-    log.info("----->SchedulerActions.scala>----runSpec-------\n" +  runSpec)
+    // 创建时，会执行这个
+    log.info(s"----->SchedulerActions.scala>-----Starting runSpec ${runSpec.id}\n----<SchedulerActions.scala>-----runSpec: $runSpec")
     //    AppDefinition(
     //                  /ftp/lgy002b,
     //                  Some(while [ true ] ; do echo 'Hello Marathon, Hello spark' ; sleep 5 ; done),
@@ -456,8 +487,8 @@ class SchedulerActions(
         val knownTaskStatuses = runSpecIds.flatMap { runSpecId =>
           TaskStatusCollector.collectTaskStatusFor(instances.specInstances(runSpecId))
         }
-        log.info("------>instances.allSpecIdsWithInstances--------:\t"+ instances.allSpecIdsWithInstances)
-        log.info("------>runSpecIds--------:\t"+ runSpecIds)
+        log.info("------>instances.allSpecIdsWithInstances--------:\t" + instances.allSpecIdsWithInstances)
+        log.info("------>runSpecIds--------:\t" + runSpecIds)
         (instances.allSpecIdsWithInstances -- runSpecIds).foreach { unknownId =>
           log.warn(
             s"RunSpec $unknownId exists in InstanceTracker, but not store. " +
@@ -492,17 +523,16 @@ class SchedulerActions(
     */
   // FIXME: extract computation into a function that can be easily tested
   @SuppressWarnings(Array("all")) // async/await
-  def scale(runSpec: RunSpec): Future[Done] = async {//异步代码块
+  def scale(runSpec: RunSpec): Future[Done] = async {
+    //异步代码块
     log.debug("Scale for run spec {}", runSpec)
 
     log.info("--------<SchedulerActions.scala>----------scale----await-----before------------")
-    val runningInstances = await(instanceTracker.specInstances(runSpec.id)).filter{x =>
-    log.info("--------<SchedulerActions.scala>---x-----:\n" + x + "\n")
+    val runningInstances = await(instanceTracker.specInstances(runSpec.id)).filter { x =>
+      log.info("--------<SchedulerActions.scala>---x-----:\n" + x + "\n")
       x.state.condition.isActive
     }
-
     log.info("-----<SchedulerActions.scala>------------scale----await-----after------------")
-
     def killToMeetConstraints(notSentencedAndRunning: Seq[Instance], toKillCount: Int) = {
       Constraints.selectInstancesToKill(runSpec, notSentencedAndRunning, toKillCount)
     }
@@ -518,7 +548,6 @@ class SchedulerActions(
     // 处理多task逻辑， 将多余的task，进行删除
     instancesToKill.foreach { instances: Seq[Instance] =>
       log.info(s"-----<SchedulerActions.scala>-------Scaling ${runSpec.id} from ${runningInstances.size} down to $targetCount instances-------")
-
       launchQueue.purge(runSpec.id)
       //map高阶函数
       //_.instanceId  对instances集合获取一个实例ID集合
@@ -543,7 +572,6 @@ class SchedulerActions(
     if (instancesToKill.isEmpty && instancesToStart.isEmpty) {
       log.info(s"----<SchedulerActions.scala>-----Already running ${runSpec.instances} instances of ${runSpec.id}. Not scaling.")
     }
-
     Done
   }
 
@@ -574,7 +602,7 @@ class SchedulerActions(
 object TaskStatusCollector {
   def collectTaskStatusFor(instances: Seq[Instance]): Seq[mesos.Protos.TaskStatus] = {
     instances.flatMap { instance =>
-      instance.tasksMap.values.withFilter{
+      instance.tasksMap.values.withFilter {
         task =>
           println("----->xej-------task.isTerminal:\t" + !task.isTerminal)
           println("----->xej-------task.isReserved:\t" + !task.isReserved)

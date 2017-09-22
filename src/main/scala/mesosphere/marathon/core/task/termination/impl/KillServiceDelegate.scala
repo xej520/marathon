@@ -5,16 +5,17 @@ import akka.Done
 import akka.actor.ActorRef
 import mesosphere.marathon.core.instance.Instance
 import mesosphere.marathon.core.task.Task
-import mesosphere.marathon.core.task.termination.{ KillReason, KillService }
+import mesosphere.marathon.core.task.termination.{KillReason, KillService}
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import scala.collection.immutable.Seq
 
 private[termination] class KillServiceDelegate(actorRef: ActorRef) extends KillService {
   import KillServiceDelegate.log
   import KillServiceActor._
 
+  //缩容操作时，会调用下面的api
   override def killInstances(instances: Seq[Instance], reason: KillReason): Future[Done] = {
     log.info(
       s"Killing ${instances.size} tasks for reason: $reason (ids: {} ...)",
@@ -22,7 +23,6 @@ private[termination] class KillServiceDelegate(actorRef: ActorRef) extends KillS
 
     val promise = Promise[Done]
     actorRef ! KillInstances(instances, promise)
-
     promise.future
   }
 

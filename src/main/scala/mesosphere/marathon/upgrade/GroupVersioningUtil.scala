@@ -32,6 +32,7 @@ object GroupVersioningUtil {
             log.info(s"[${newApp.id}]: ------>GroupVersioningUtil.scala<-------upgrade detected for app (oldVersion ${oldApp.versionInfo})")
             oldApp.versionInfo.withConfigChange(newVersion = version)
           } else if (oldApp.isOnlyScaleChange(newApp)) {
+            //缩容的时候，会走这个分支
             log.info(s"[${newApp.id}]: ------>GroupVersioningUtil.scala<-------scaling op detected for app (oldVersion ${oldApp.versionInfo})")
             oldApp.versionInfo.withScaleOrRestartChange(newVersion = version)
           } else if (oldApp.versionInfo != newApp.versionInfo && newApp.versionInfo == VersionInfo.NoVersion) {
@@ -41,7 +42,6 @@ object GroupVersioningUtil {
             oldApp.versionInfo
           }
       }
-
       newApp.copy(versionInfo = newVersionInfo)
     }
 

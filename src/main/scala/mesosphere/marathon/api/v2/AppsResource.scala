@@ -87,9 +87,7 @@ class AppsResource @Inject() (
       println("--------------------------------xej--------------------create--------------------")
       //app 的类型是  AppDefinition
       val app = normalizedApp(appDef, now)
-
       checkAuthorization(CreateRunSpec, app)
-
       def createOrThrow(opt: Option[AppDefinition]) = opt
         .map(_ => throw ConflictingChangeException(s"An app with id [${app.id}] already exists."))
         .getOrElse(app)
@@ -105,7 +103,6 @@ class AppsResource @Inject() (
       //Deployment是阻塞模式，完成不了，不会进入下一个阶段
       val plan = result(groupManager.updateApp(app.id, createOrThrow, app.version, force))
       println("---------<<AppsResource.scala>>-----------------result()-------end-----------------------")
-
       println("---------<<AppsResource.scala>>------appWithDeployments-----------AppInfo()-------start-----------------------")
       //你是不是傻，下面的形式，不就是创建一个
       // AppInfo对象么
@@ -117,7 +114,6 @@ class AppsResource @Inject() (
         maybeTasks = Some(Seq.empty),
         maybeDeployments = Some(Seq(Identifiable(plan.id)))
       )
-
       println("---------<<AppsResource.scala>>-------maybePostEvent()-------start-----------------------")
       maybePostEvent(req, appWithDeployments.app)
       println("---------<<AppsResource.scala>>-------maybePostEvent()-------end-------------------------")
@@ -157,7 +153,6 @@ class AppsResource @Inject() (
       //      "ports":[10034],
       //      "portDefinitions":[{"port":10034,"protocol":"tcp","labels":{}}],
       //      "requirePorts":false}
-
       //Response  这应该是java代码了
       Response
         .created(new URI(app.id.toString))
