@@ -54,11 +54,11 @@ trait StartingBehavior extends ReadinessBehavior { this: Actor =>
       log.info(s"-----<StartingBehavior.scala>----实际大小----instancesToStartNow:\t$instancesToStartNow, appId=${runSpec.id}  默认是0")
       log.debug(s"Sync start instancesToStartNow=$instancesToStartNow appId=${runSpec.id}")
       if (instancesToStartNow > 0) {
-        log.info(s"Reconciling app ${runSpec.id} scaling: queuing $instancesToStartNow new instances")
+        log.info(s"Reconciling app ${runSpec.id} scaling: queuing $instancesToStartNow new instances，-----runSpec:$runSpec")
         log.info(s"-----<StartingBehavior.scala>----用户指定的----列出正在运行的-----app:${launchQueue.listRunSpecs}")
         launchQueue.add(runSpec, instancesToStartNow)
       }
-      log.info(s"-----<StartingBehavior.scala>----marathon-----周期性的---定时校验---------")
+      log.info("-----<StartingBehavior.scala>----marathon-----周期性的---定时校验----每隔5秒钟调用一次-----")
       context.system.scheduler.scheduleOnce(5.seconds, self, Sync)
 
     case DeploymentActor.Shutdown =>

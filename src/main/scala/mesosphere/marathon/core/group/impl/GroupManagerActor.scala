@@ -27,6 +27,8 @@ import scala.collection.mutable
 import scala.concurrent.Future
 import scala.util.{ Failure, Success }
 
+//GroupManagerActor是伴生对象 和 伴生类
+//在伴生对象GroupManagerActor 里，定义了一些共享数据，case class
 private[group] object GroupManagerActor {
   sealed trait Request
 
@@ -104,32 +106,35 @@ private[impl] class GroupManagerActor(
   //actor自己，会不断运行这个
   override def receive: Receive = {
     case GetRunSpecWithId(id) => {
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetRunSpecWithId(id):\t" + id)
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----getRunSpec(id):\t" + getRunSpec(id))
+      log.info("---------<GroupManagerActor.scala>------receive方法---case GetRunSpecWithId(id)-----GetRunSpecWithId(id):\t" + id)
+      log.info("---------<GroupManagerActor.scala>------receive方法---case GetRunSpecWithId(id)------getRunSpec(id):\t" + getRunSpec(id))
       getRunSpec(id).pipeTo(sender())
     }
       //marathon 自己有定时器，大概每隔5秒钟，会执行下面的分支
     case GetAppWithId(id) => {
       log.info("------------------------------------------1----------------------------------------------")
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetAppWithId(id):\t" + id)
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----getApp(id):\t" + getApp(id))
+      log.info("---------<GroupManagerActor.scala>---receive方法---case GetAppWithId(id)-----GetAppWithId(id):\t" + id)// /ftp/lgy001
+      log.info("---------<GroupManagerActor.scala>---receive方法---case GetAppWithId(id)------getApp(id):\t" + getApp(id)) // List()
+      log.info("---------<GroupManagerActor.scala>---receive方法---case GetAppWithId(id)-----sender():\t" + sender.getClass) // sender()
       log.info("------------------------------------------2----------------------------------------------")
-      getApp(id).pipeTo(sender())
+      //sender 与 sender() 是一样，就是一个引用，
+      //比方说，A给B发送消息，B收到消息后，想给A返回消息的话，就可以使用sender这个引用
+      getApp(id).pipeTo(sender)
     }
     case GetPodWithId(id) =>{
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetRunSpecWithId(id):\t" + id)
+      log.info("---------<GroupManagerActor.scala>--------------receive方法---case GetPodWithId(id)-----GetRunSpecWithId(id):\t" + id)
       getPod(id).pipeTo(sender())
     }
     case GetRootGroup => {
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetRootGroup(id)")
+      log.info("---------<GroupManagerActor.scala>--------------receive方法---case GetRootGroup-----GetRootGroup(id)")
       groupRepo.root().pipeTo(sender())
     }
     case GetGroupWithId(id) => {
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetGroupWithId(id):\t" + id)
+      log.info("---------<GroupManagerActor.scala>--------------receive方法---case GetGroupWithId(id)-----GetGroupWithId(id):\t" + id)
       getGroupWithId(id).pipeTo(sender())
     }
     case GetGroupWithVersion(id, version) => {
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetGroupWithVersion(id):\t" + id)
+      log.info("---------<GroupManagerActor.scala>--------------receive方法---case GetGroupWithVersion(id):\t" + id)
       getGroupWithVersion(id, version).pipeTo(sender())
     }
       //gid: 就是组ID号如/ftp, appID号: /ftp/lgy001, 那么gid就是/ftp
@@ -137,12 +142,12 @@ private[impl] class GroupManagerActor(
       //force boolean类型 false
       //toKill是一个map集合，Map[pathID, Seq] 其实，pathID 就是appID, /ftp/lgy001,  如 Map(/ftp/xej002 -> List())
     case GetUpgrade(gid, change, version, force, toKill) => {
-        log.info(s"---------<GroupManagerActor.scala>---gid:\t{}\n---change: {}\n----version:{}\n----force:{}\n----toKill:{}\n", gid, change,version,force,toKill)
-        log.info("---------<GroupManagerActor.scala>---sender()----:\t" + sender().getClass)
+        log.info(s"---------<GroupManagerActor.scala>--------------receive方法---case GetUpgrade----gid:\t${gid}\n---change: ${change}\n----version:${version}\n----force:${force}\n----toKill:${toKill}")
+        log.info("---------<GroupManagerActor.scala>--------------receive方法---case GetUpgrade------sender()----:\t" + sender().getClass)
         getUpgrade(gid, change, version, force, toKill).pipeTo(sender())
       }
     case GetAllVersions(id) => {
-      log.info("---------<GroupManagerActor.scala>---GroupManagerActor-----GetAllVersions(id):\t" + id)
+      log.info("---------<GroupManagerActor.scala>--------------receive方法---case GroupManagerActor-----GetAllVersions(id):\t" + id)
       getVersions(id).pipeTo(sender())
     }
   }
@@ -178,7 +183,7 @@ private[impl] class GroupManagerActor(
     force: Boolean,
     toKill: Map[PathId, Seq[Instance]]): Future[DeploymentPlan] = {
     serializeUpdates {
-      log.info(s"---------<GroupManagerActor.scala>-----Upgrade root group version:$version with force:$force")
+      log.info(s"---------<GroupManagerActor.scala>----def getUpgrade方法---Upgrade root group version:$version with force:$force")
       //声明一个变量
       val deployment = for {
         from <- groupRepo.root()
@@ -189,19 +194,19 @@ private[impl] class GroupManagerActor(
       //plan包括：DeploymentID号，step1, step2
         plan = DeploymentPlan(from, to, resolve, version, toKill)
         _ = validateOrThrow(plan)(DeploymentPlan.deploymentPlanValidator(config))
-        _ = log.info(s"------->GroupManagerActor.scala<-------Computed new deployment plan:\n$plan")
+        _ = log.info(s"------->GroupManagerActor.scala<----def getUpgrade方法----Computed new deployment plan:\n$plan")
         _ <- groupRepo.storeRootVersion(plan.target, plan.createdOrUpdatedApps, plan.createdOrUpdatedPods)
         _ <- scheduler.deploy(plan, force)
         _ <- groupRepo.storeRoot(plan.target, plan.createdOrUpdatedApps,
           plan.deletedApps, plan.createdOrUpdatedPods, plan.deletedPods)
       //Deployment阶段后，才开始，执行下面的语句 1
-        _ = log.info(s"------->GroupManagerActor.scala<-------Updated groups/apps/pods according to deployment plan ${plan.id}")
+        _ = log.info(s"------->GroupManagerActor.scala<----def getUpgrade方法----Updated groups/apps/pods according to deployment plan ${plan.id}")
       } yield plan
 
       deployment.onComplete {
         case Success(plan) =>
           //Deployment阶段后，才开始，执行下面的语句 2
-          log.info(s"------->GroupManagerActor.scala<------Deployment acknowledged. Waiting to get processed:\n$plan")
+          log.info(s"-------->GroupManagerActor.scala<----def getUpgrade方法---Deployment acknowledged. Waiting to get processed:\n$plan")
           eventBus.publish(GroupChangeSuccess(gid, version.toString))
         case Failure(ex: AccessDeniedException) =>
         // If the request was not authorized, we should not publish an event

@@ -41,8 +41,12 @@ trait InstanceTracker {
 }
 
 object InstanceTracker {
+  //这里面，定义了两个伴生对象啊
+  //第一 个是InstancesBySpec
+  //第2 个是
   /**
     * Contains all tasks grouped by app ID.
+    * 根据传入的appId,来获取“这个组的”所有的tasks
     */
   case class InstancesBySpec private (instancesMap: Map[PathId, InstanceTracker.SpecInstances]) {
     import InstancesBySpec._
@@ -98,11 +102,10 @@ object InstanceTracker {
   }
   /**
     * Contains only the tasks of the app with the given app ID.
-    *
+    * 只获取 某一个app的tasks，并不是整个组的哦
     * @param specId The id of the app.
     * @param instanceMap The tasks of this app by task ID. FIXME: change keys to Task.TaskID
     */
-
   case class SpecInstances(specId: PathId, instanceMap: Map[Instance.Id, Instance] = Map.empty) {
     println(s"----<InstanceTracker.scala>----specId:${specId},-----instanceMap:\t${instanceMap}")
     def isEmpty: Boolean = instanceMap.isEmpty

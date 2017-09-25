@@ -15,6 +15,7 @@ import mesosphere.marathon.{ AppStartCanceledException, SchedulerActions }
 import scala.concurrent.Promise
 import scala.util.control.NonFatal
 
+// AppStartActor 都是伴生对象，伴生类
 class AppStartActor(
     val deploymentManager: ActorRef,
     val status: DeploymentStatus,

@@ -10,6 +10,9 @@ import org.apache.mesos.{ Protos => MesosProtos }
 
 /**
   * An operation which relates to an instance and is send to Mesos for execution in an `acceptOffers` API call.
+  *
+  * 关于实例的操作，操作
+  *
   */
 sealed trait InstanceOp {
   /** The ID of the affected instance. */
