@@ -90,6 +90,7 @@ object InstanceOp {
             resourceBuilder.setDisk(
               MesosProtos.Resource.DiskInfo.newBuilder.
                 setSource(source))
+
           case None =>
             println("-----<InstanceOp.scala>----开始清理---磁盘--------")
             resourceBuilder.clearDisk()
